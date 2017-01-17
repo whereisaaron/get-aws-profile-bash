@@ -1,4 +1,4 @@
-# Fetch AWS keys and secrets from and AWS credentials file
+# Fetch AWS keys/secrets from a AWS credentials file
 
 This is a pure bash script that can parse and extract AWS credentials (key id and secret) from a `~/.aws/credentials` file.
 
