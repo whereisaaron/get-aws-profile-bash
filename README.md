@@ -47,6 +47,19 @@ $ ./get-aws-profile.sh --credentials /foo/bar/my-creds-file --secret
 wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 ```
 
+## AWS Credentials file format
+The AWS credentials file format appears to follow the old [Windows 'ini' file format](https://en.wikipedia.org/wiki/INI_file). Check the [AWS documentation](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html) for more information.
+
+```
+[default]
+aws_access_key_id=AKIAIOSFODNN7EXAMPLE
+aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+
+[my-profile]
+aws_access_key_id=AKIAI44QH8DHBEXAMPLE
+aws_secret_access_key=je7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY
+```
+
 # Rationale
 I often need to include an AWS key id and secret in deployment scripts. Yet I don't want to actually include the credentials in the script or in the git repository. Many AWS client support storing AWS credentials in an `~/.aws/credentials` files and using a `--profile` argument or `AWS_DEFAULT_PROFILE` environment variable. However other tools only work by setting the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables. Sometimes you need to inject these credentials into stored secrets or configurations. This script helps script these tasks whilst keeping the credentials out of your scripts and repository. I wanted a pure bash solution I could include in automated build and deployment environments.
 
