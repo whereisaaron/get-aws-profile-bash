@@ -21,8 +21,6 @@ $ ./get-aws-profile.sh --profile my-example
 export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
 export AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 
-$ source < ./get-aws-profile.sh --profile my-example
-
 $ eval $(./get-aws-profile.sh --profile my-example)
 ```
 
@@ -39,7 +37,7 @@ $ export AWS_ACCESS_KEY_ID=$(./get-aws-profile.sh --profile my-example --key)
 $ export AWS_SECRET_ACCESS_KEY=$(./get-aws-profile.sh --profile my-example --secret) 
 ```
 
-## Get key and secret for 'default' profile from an 'ini' file
+## Get key and secret for 'default' profile from a custom 'ini' file
 
 ```
 $ ./get-aws-profile.sh --credentials /foo/bar/my-creds-file --key
