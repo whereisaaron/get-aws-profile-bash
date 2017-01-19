@@ -4,6 +4,9 @@
 # Fetch the AWS access key and/or secret for an AWS profile
 # stored in the ~/.aws/credentials file ini format
 #
+# Aaron Roydhouse <aaron@roydhouse.com>, 2017
+# https://github.com/whereisaaron/get-aws-profile-bash/
+#
 
 #
 # cfg_parser - Parse and ini files into variables
