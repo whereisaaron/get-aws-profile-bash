@@ -48,7 +48,7 @@ display_usage ()
   echo "  Default --profile is 'default'"
   echo "  By default environment variables are generate, e.g."
   echo "    source \$($0 --profile=myprofile)"
-  echo "  You can specify one --key or --secret to get just that value, with no line break,"
+  echo "  You can specify one of --key, --secret, -or --session-token to get just that value, with no line break,"
   echo "    FOO_KEY=\$($0 --profile=myprofile --key)"
   echo "    FOO_SECRET=\$($0 --profile=myprofile --secret)"
   echo "    FOO_SESSION_TOKEN=\$($0 --profile=myprofile --session-token)"
