@@ -43,14 +43,15 @@ cfg_parser ()
 
 display_usage ()
 {
-  echo "Usage: $0 [--credentials=<path>] [--profile=<name>] [--key|--secret]"
+  echo "Usage: $0 [--credentials=<path>] [--profile=<name>] [--key|--secret|--session-token]"
   echo "  Default --credentials is '~/.aws/credentials'"
   echo "  Default --profile is 'default'"
   echo "  By default environment variables are generate, e.g."
   echo "    source \$($0 --profile=myprofile)"
-  echo "  You can specify one --key or --secret to get just that value, with no line break,"
+  echo "  You can specify one of --key, --secret, -or --session-token to get just that value, with no line break,"
   echo "    FOO_KEY=\$($0 --profile=myprofile --key)"
   echo "    FOO_SECRET=\$($0 --profile=myprofile --secret)"
+  echo "    FOO_SESSION_TOKEN=\$($0 --profile=myprofile --session-token)"
 }
 
 for i in "$@"
@@ -70,6 +71,10 @@ case $i in
     ;;
     --secret)
     SHOW_SECRET=true
+    shift # past argument with no value
+    ;;
+    --session-token)
+    SHOW_SESSION_TOKEN=true
     shift # past argument with no value
     ;;
     --help)
@@ -93,6 +98,7 @@ CREDENTIALS=${CREDENTIALS:-~/.aws/credentials}
 PROFILE=${PROFILE:-default}
 SHOW_KEY=${SHOW_KEY:-false}
 SHOW_SECRET=${SHOW_SECRET:-false}
+SHOW_SESSION_TOKEN=${SHOW_SESSION_TOKEN:-false}
 
 if [[ "${SHOW_KEY}" = true && "${SHOW_SECRET}" = true ]]; then
   echo "Can only specify one of --key or --secret"
@@ -121,13 +127,16 @@ if [[ $? -ne 0 ]]; then
   exit 5
 fi
 
-if [[ "${SHOW_KEY}" = false && "${SHOW_SECRET}" = false ]]; then
+if [[ "${SHOW_KEY}" = false && "${SHOW_SECRET}" = false && "${SHOW_SESSION_TOKEN}" = false ]]; then
   echo "export AWS_ACCESS_KEY_ID=${aws_access_key_id}"
   echo "export AWS_SECRET_ACCESS_KEY=${aws_secret_access_key}"
+  echo "export AWS_SESSION_TOKEN=${aws_session_token}"
 elif [[ "${SHOW_KEY}" = true ]]; then
   echo -n "${aws_access_key_id}"
 elif [[ "${SHOW_SECRET}" = true ]]; then
   echo -n "${aws_secret_access_key}"
+elif [[ "${SHOW_SESSION_TOKEN}" = true ]]; then
+  echo -n "${aws_session_token}"
 else
   echo "Unknown error"
   exit 9
