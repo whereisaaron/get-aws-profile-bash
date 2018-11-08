@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -f
 
 #
 # Fetch the AWS access key and/or secret for an AWS profile
