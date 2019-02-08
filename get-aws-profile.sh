@@ -37,21 +37,27 @@ cfg_parser ()
   eval "$(echo "${ini[*]}")" # eval the result
 }
 
+# echo a message to standard error (used for messages not intended
+# to be parsed by scripts, such as usage messages, warnings or errors)
+echo_stderr() {
+  echo "$@" >&2
+}
+
 #
 # Parse options
 #
 
 display_usage ()
 {
-  echo "Usage: $0 [--credentials=<path>] [--profile=<name>] [--key|--secret|--session-token]"
-  echo "  Default --credentials is '~/.aws/credentials'"
-  echo "  Default --profile is 'default'"
-  echo "  By default environment variables are generate, e.g."
-  echo "    source \$($0 --profile=myprofile)"
-  echo "  You can specify one of --key, --secret, -or --session-token to get just that value, with no line break,"
-  echo "    FOO_KEY=\$($0 --profile=myprofile --key)"
-  echo "    FOO_SECRET=\$($0 --profile=myprofile --secret)"
-  echo "    FOO_SESSION_TOKEN=\$($0 --profile=myprofile --session-token)"
+  echo_stderr "Usage: $0 [--credentials=<path>] [--profile=<name>] [--key|--secret|--session-token]"
+  echo_stderr "  Default --credentials is '~/.aws/credentials'"
+  echo_stderr "  Default --profile is 'default'"
+  echo_stderr "  By default environment variables are generate, e.g."
+  echo_stderr "    source \$($0 --profile=myprofile)"
+  echo_stderr "  You can specify one of --key, --secret, -or --session-token to get just that value, with no line break,"
+  echo_stderr "    FOO_KEY=\$($0 --profile=myprofile --key)"
+  echo_stderr "    FOO_SECRET=\$($0 --profile=myprofile --secret)"
+  echo_stderr "    FOO_SESSION_TOKEN=\$($0 --profile=myprofile --session-token)"
 }
 
 for i in "$@"
@@ -101,7 +107,7 @@ SHOW_SECRET=${SHOW_SECRET:-false}
 SHOW_SESSION_TOKEN=${SHOW_SESSION_TOKEN:-false}
 
 if [[ "${SHOW_KEY}" = true && "${SHOW_SECRET}" = true ]]; then
-  echo "Can only specify one of --key or --secret"
+  echo_stderr "Can only specify one of --key or --secret"
   display_usage
   exit 2
 fi
@@ -111,19 +117,19 @@ fi
 #
 
 if [[ ! -r "${CREDENTIALS}" ]]; then
-  echo "File not found: '${CREDENTIALS}'"
+  echo_stderr "File not found: '${CREDENTIALS}'"
   exit 3
 fi
 
 cfg_parser "${CREDENTIALS}"
 if [[ $? -ne 0 ]]; then
-  echo "Parsing credentials file '${CREDENTIALS}' failed"
+  echo_stderr "Parsing credentials file '${CREDENTIALS}' failed"
   exit 4
 fi
 
 cfg.section.${PROFILE}
 if [[ $? -ne 0 ]]; then
-  echo "Profile '${PROFILE}' not found"
+  echo_stderr "Profile '${PROFILE}' not found"
   exit 5
 fi
 
@@ -138,7 +144,7 @@ elif [[ "${SHOW_SECRET}" = true ]]; then
 elif [[ "${SHOW_SESSION_TOKEN}" = true ]]; then
   echo -n "${aws_session_token}"
 else
-  echo "Unknown error"
+  echo_stderr "Unknown error"
   exit 9
 fi
 
