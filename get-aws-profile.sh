@@ -39,8 +39,9 @@ cfg_parser ()
 
 # echo a message to standard error (used for messages not intended
 # to be parsed by scripts, such as usage messages, warnings or errors)
-echo_stderr() {
-  echo "$@" >&2
+echo_stderr ()
+{
+  printf '%s\n' "$@" >&2
 }
 
 #
@@ -50,14 +51,17 @@ echo_stderr() {
 display_usage ()
 {
   echo_stderr "Usage: $0 [--credentials=<path>] [--profile=<name>] [--key|--secret|--session-token]"
-  echo_stderr "  Default --credentials is '~/.aws/credentials'"
+  echo_stderr ""
+  echo_stderr "  Default --credentials is '${HOME}/.aws/credentials'"
   echo_stderr "  Default --profile is 'default'"
-  echo_stderr "  By default environment variables are generate, e.g."
-  echo_stderr "    source \$($0 --profile=myprofile)"
-  echo_stderr "  You can specify one of --key, --secret, -or --session-token to get just that value, with no line break,"
-  echo_stderr "    FOO_KEY=\$($0 --profile=myprofile --key)"
-  echo_stderr "    FOO_SECRET=\$($0 --profile=myprofile --secret)"
-  echo_stderr "    FOO_SESSION_TOKEN=\$($0 --profile=myprofile --session-token)"
+  echo_stderr ""
+  echo_stderr "  By default environment variables are generated, e.g."
+  echo_stderr "    source \$($0 --profile=${PROFILE:-myprofile})"
+  echo_stderr ""
+  echo_stderr "  You can specify one of --key, --secret, -or --session-token to get just that value, with no line break:"
+  echo_stderr "    FOO_KEY=\$($0 --profile=${PROFILE:-myprofile} --key)"
+  echo_stderr "    FOO_SECRET=\$($0 --profile=${PROFILE:-myprofile} --secret)"
+  echo_stderr "    FOO_SESSION_TOKEN=\$($0 --profile=${PROFILE:-myprofile} --session-token)"
 }
 
 for i in "$@"
@@ -89,7 +93,7 @@ case $i in
     ;;
     *)
     # unknown option
-    echo "Unknown option $1"
+    echo_stderr "Unknown option $1"
     display_usage
     exit 1
     ;;
@@ -100,7 +104,7 @@ done
 # Check options
 #
 
-CREDENTIALS=${CREDENTIALS:-~/.aws/credentials}
+CREDENTIALS="${CREDENTIALS:-"${HOME}/.aws/credentials"}"
 PROFILE=${PROFILE:-default}
 SHOW_KEY=${SHOW_KEY:-false}
 SHOW_SECRET=${SHOW_SECRET:-false}
@@ -134,15 +138,16 @@ if [[ $? -ne 0 ]]; then
 fi
 
 if [[ "${SHOW_KEY}" = false && "${SHOW_SECRET}" = false && "${SHOW_SESSION_TOKEN}" = false ]]; then
-  echo "export AWS_ACCESS_KEY_ID=${aws_access_key_id}"
-  echo "export AWS_SECRET_ACCESS_KEY=${aws_secret_access_key}"
-  echo "export AWS_SESSION_TOKEN=${aws_session_token}"
+  echo_stderr "# Profile: ${PROFILE}"
+  printf 'export AWS_ACCESS_KEY_ID=%s\n' "${aws_access_key_id}"
+  printf 'export AWS_SECRET_ACCESS_KEY=%s\n' "${aws_secret_access_key}"
+  printf 'export AWS_SESSION_TOKEN=%s\n' "${aws_session_token}"
 elif [[ "${SHOW_KEY}" = true ]]; then
-  echo -n "${aws_access_key_id}"
+  printf '%s' "${aws_access_key_id}"
 elif [[ "${SHOW_SECRET}" = true ]]; then
-  echo -n "${aws_secret_access_key}"
+  printf '%s' "${aws_secret_access_key}"
 elif [[ "${SHOW_SESSION_TOKEN}" = true ]]; then
-  echo -n "${aws_session_token}"
+  printf '%s' "${aws_session_token}"
 else
   echo_stderr "Unknown error"
   exit 9
