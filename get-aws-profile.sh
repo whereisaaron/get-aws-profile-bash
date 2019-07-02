@@ -1,4 +1,13 @@
-#!/bin/bash -f
+#!/usr/bin/env bash
+# -*- coding: utf-8 -*-
+
+# "unofficial" bash strict mode
+# See: http://redsymbol.net/articles/unofficial-bash-strict-mode
+set -o errexit  # Exit when simple command fails               'set -e'
+set -o errtrace # Exit on error inside any functions or subshells.
+set -o nounset  # Trigger error when expanding unset variables 'set -u'
+set -o pipefail # Do not hide errors within pipes              'set -o pipefail'
+IFS=$'\n\t'
 
 #
 # Fetch the AWS access key and/or secret for an AWS profile
@@ -17,24 +26,27 @@
 # http://pastebin.com/m4fe6bdaf (supports spaces in values)
 #
 
+# shellcheck disable=SC2206
 cfg_parser ()
 {
-  IFS=$'\n' && ini=( $(<$1) ) # convert to line-array
-  ini=( ${ini[*]//;*/} )      # remove comments ;
-  ini=( ${ini[*]//\#*/} )     # remove comments #
-  ini=( ${ini[*]/\	=/=} )  # remove tabs before =
-  ini=( ${ini[*]/=\	/=} )   # remove tabs be =
-  ini=( ${ini[*]/\ *=\ /=} )   # remove anything with a space around  =
+  # IFS=$'\n' && ini=( $(<$1) ) # convert to line-array
+  mapfile ini <"${1:?Missing INI filename}"
+  ini=( ${ini[*]//;*/} )              # remove comments ;
+  ini=( ${ini[*]//\#*/} )             # remove comments #
+  ini=( ${ini[*]/\	=/=} )            # remove tabs before =
+  ini=( ${ini[*]/=\	/=} )             # remove tabs be =
+  ini=( ${ini[*]/\ *=\ /=} )          # remove anything with a space around  =
   ini=( ${ini[*]/#[/\}$'\n'cfg.section.} ) # set section prefix
-  ini=( ${ini[*]/%]/ \(} )    # convert text2function (1)
-  ini=( ${ini[*]/=/=\( } )    # convert item to array
-  ini=( ${ini[*]/%/ \)} )     # close array parenthesis
-  ini=( ${ini[*]/%\\ \)/ \\} ) # the multiline trick
-  ini=( ${ini[*]/%\( \)/\(\) \{} ) # convert text2function (2)
-  ini=( ${ini[*]/%\} \)/\}} ) # remove extra parenthesis
-  ini[0]="" # remove first element
-  ini[${#ini[*]} + 1]='}'    # add the last brace
-  eval "$(echo "${ini[*]}")" # eval the result
+  ini=( ${ini[*]/%]/ \(} )            # convert text2function (1)
+  ini=( ${ini[*]/=/=\( } )            # convert item to array
+  ini=( ${ini[*]/%/ \)} )             # close array parenthesis
+  ini=( ${ini[*]/%\\ \)/ \\} )        # the multiline trick
+  ini=( ${ini[*]/%\( \)/\(\) \{} )    # convert text2function (2)
+  ini=( ${ini[*]/%\} \)/\}} )         # remove extra parenthesis
+  ini[0]=""                           # remove first element
+  ini[${#ini[*]} + 1]='}'             # add the last brace
+  # shellcheck disable=SC2116
+  eval "$(echo "${ini[*]}")"          # eval the result
 }
 
 # echo a message to standard error (used for messages not intended
@@ -67,31 +79,31 @@ display_usage ()
 for i in "$@"
 do
 case $i in
-    --credentials=*)
+  -c=*|-f=*|--credentials=*)
     CREDENTIALS="${i#*=}"
     shift # past argument=value
     ;;
-    --profile=*)
+  -p=*|--profile=*)
     PROFILE="${i#*=}"
     shift # past argument=value
     ;;
-    --key)
+  -k|--key)
     SHOW_KEY=true
     shift # past argument with no value
     ;;
-    --secret)
+  -s|--secret)
     SHOW_SECRET=true
     shift # past argument with no value
     ;;
-    --session-token)
+  -t|--session-token)
     SHOW_SESSION_TOKEN=true
     shift # past argument with no value
     ;;
-    --help)
+  -h*|--h*)
     display_usage
     exit 0
     ;;
-    *)
+  *)
     # unknown option
     echo_stderr "Unknown option $1"
     display_usage
@@ -125,18 +137,17 @@ if [[ ! -r "${CREDENTIALS}" ]]; then
   exit 3
 fi
 
-cfg_parser "${CREDENTIALS}"
-if [[ $? -ne 0 ]]; then
+if ! cfg_parser "${CREDENTIALS}"; then
   echo_stderr "Parsing credentials file '${CREDENTIALS}' failed"
   exit 4
 fi
 
-cfg.section.${PROFILE}
-if [[ $? -ne 0 ]]; then
+if ! cfg.section."${PROFILE}" >/dev/null; then
   echo_stderr "Profile '${PROFILE}' not found"
   exit 5
 fi
 
+# shellcheck disable=SC2154
 if [[ "${SHOW_KEY}" = false && "${SHOW_SECRET}" = false && "${SHOW_SESSION_TOKEN}" = false ]]; then
   echo_stderr "# Profile: ${PROFILE}"
   printf 'export AWS_ACCESS_KEY_ID=%s\n' "${aws_access_key_id}"
