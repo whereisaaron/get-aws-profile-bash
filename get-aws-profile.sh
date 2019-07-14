@@ -49,20 +49,21 @@ echo_stderr() {
 
 display_usage ()
 {
-  echo_stderr "Usage: $0 [--credentials=<path>] [--profile=<name>] [--key|--secret|--session-token]"
+  echo_stderr "Usage: $0 [--credentials=<path>] [--profile=<name>] [--key|--secret|--session-token|--session-expiration]"
   echo_stderr "  Default --credentials is '~/.aws/credentials'"
   echo_stderr "  Default --profile is 'default'"
   echo_stderr "  By default environment variables are generate, e.g."
   echo_stderr "    source \$($0 --profile=myprofile)"
-  echo_stderr "  You can specify one of --key, --secret, -or --session-token to get just that value, with no line break,"
+  echo_stderr "  You can specify one of --key, --secret, --session-token or --session-expiration to get just that value, with no line break,"
   echo_stderr "    FOO_KEY=\$($0 --profile=myprofile --key)"
   echo_stderr "    FOO_SECRET=\$($0 --profile=myprofile --secret)"
   echo_stderr "    FOO_SESSION_TOKEN=\$($0 --profile=myprofile --session-token)"
+  echo_stderr "    FOO_SESSION_EXPIRATION=\$($0 --profile=myprofile --session-expiration)"
 }
 
 for i in "$@"
 do
-case $i in
+  case $i in
     --credentials=*)
     CREDENTIALS="${i#*=}"
     shift # past argument=value
@@ -83,6 +84,10 @@ case $i in
     SHOW_SESSION_TOKEN=true
     shift # past argument with no value
     ;;
+    --session-expiration)
+    SHOW_SESSION_EXPIRATION=true
+    shift # past argument with no value
+    ;;
     --help)
     display_usage
     exit 0
@@ -93,7 +98,7 @@ case $i in
     display_usage
     exit 1
     ;;
-esac
+  esac
 done
 
 #
@@ -105,6 +110,7 @@ PROFILE=${PROFILE:-default}
 SHOW_KEY=${SHOW_KEY:-false}
 SHOW_SECRET=${SHOW_SECRET:-false}
 SHOW_SESSION_TOKEN=${SHOW_SESSION_TOKEN:-false}
+SHOW_SESSION_EXPIRATION=${SHOW_SESSION_EXPIRATION:-false}
 
 if [[ "${SHOW_KEY}" = true && "${SHOW_SECRET}" = true ]]; then
   echo_stderr "Can only specify one of --key or --secret"
@@ -133,16 +139,19 @@ if [[ $? -ne 0 ]]; then
   exit 5
 fi
 
-if [[ "${SHOW_KEY}" = false && "${SHOW_SECRET}" = false && "${SHOW_SESSION_TOKEN}" = false ]]; then
+if [[ "${SHOW_KEY}" = false && "${SHOW_SECRET}" = false && "${SHOW_SESSION_TOKEN}" = false && "${SHOW_EXPIRATION}" = false ]]; then
   echo "export AWS_ACCESS_KEY_ID=${aws_access_key_id}"
   echo "export AWS_SECRET_ACCESS_KEY=${aws_secret_access_key}"
   echo "export AWS_SESSION_TOKEN=${aws_session_token}"
+  echo "export AWS_SESSION_EXPIRATION=${aws_session_expiration}"
 elif [[ "${SHOW_KEY}" = true ]]; then
   echo -n "${aws_access_key_id}"
 elif [[ "${SHOW_SECRET}" = true ]]; then
   echo -n "${aws_secret_access_key}"
 elif [[ "${SHOW_SESSION_TOKEN}" = true ]]; then
   echo -n "${aws_session_token}"
+elif [[ "${SHOW_SESSION_EXPIRATION}" = true ]]; then
+  echo -n "${aws_session_expiration}"
 else
   echo_stderr "Unknown error"
   exit 9
